@@ -13,10 +13,11 @@ class MyColor {
 
 class LetGo extends StatelessWidget {
   const LetGo({super.key});
+  static const String title = 'LetitGo';
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'LetitGo',
+    title: title,
     themeMode: ThemeMode.dark,
     darkTheme: ThemeData(
       colorScheme: const ColorScheme.dark(
@@ -75,20 +76,19 @@ class _HomePageState extends State<HomePage> {
   Future<void> _resetStartDate(DateTime use) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_reference, use.millisecondsSinceEpoch);
-    setState(update);
+    setState(() => _startDate = use);
   }
 
-  Future<void> _changeStartDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _startDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
+  Future<void> _changeStartDate() async => showDatePicker(
+    context: context,
+    initialDate: _startDate,
+    firstDate: DateTime(2000),
+    lastDate: DateTime.now(),
+  ).then((picked) {
     if (picked != null && picked != _startDate) {
       _resetStartDate(picked);
     }
-  }
+  });
 
   Iterable<(String, String)> _formatDuration() {
     final duration = DateTime.now().difference(_startDate);
@@ -119,7 +119,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _showResetConfirmation() async => showDialog<void>(
     context: context,
-    barrierDismissible: false,
     builder: (BuildContext context) => AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -202,15 +201,30 @@ class _HomePageState extends State<HomePage> {
     ),
   );
 
-  Widget _buildDurationList() => SizedBox(
-    height: 100,
-    child: ListView.separated(
-      shrinkWrap: true,
-      scrollDirection: Axis.horizontal,
-      itemCount: _formatDuration().length,
-      itemBuilder: (_, index) {
-        final part = _formatDuration().elementAt(index);
-        return Row(
+  Widget _buildDurationList() {
+    final formattedDuration = _formatDuration().toList();
+    final firstLine = formattedDuration
+        .where((element) => ['y', 'M', 'd'].contains(element.$2))
+        .toList();
+    final secondLine = formattedDuration
+        .where((element) => ['h', 'm', 's'].contains(element.$2))
+        .toList();
+
+    return Column(
+      children: [
+        _buildDurationRow(firstLine),
+        _buildDurationRow(secondLine),
+      ],
+    );
+  }
+
+  Widget _buildDurationRow(List<(String, String)> durationList) => durationList.isEmpty
+    ? const SizedBox.shrink()
+    : Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: durationList.map((part) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
@@ -231,9 +245,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ],
-        );
-      },
-      separatorBuilder: (context, index) => const SizedBox(width: 8),
-    ),
-  );
+        ),
+      )).toList(),
+    );
 }
