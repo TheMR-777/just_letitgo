@@ -203,49 +203,52 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDurationList() {
     final formattedDuration = _formatDuration().toList();
-    final firstLine = formattedDuration
+    final line01 = formattedDuration
         .where((element) => ['y', 'M', 'd'].contains(element.$2))
         .toList();
-    final secondLine = formattedDuration
+    final line02 = formattedDuration
         .where((element) => ['h', 'm', 's'].contains(element.$2))
         .toList();
 
+    final line01_fontSize = 12 * (3 + (4 - line01.length)).toDouble();
+    final line02_fontSize = (12 * 4).toDouble();
+
     return Column(
       children: [
-        _buildDurationRow(firstLine),
-        _buildDurationRow(secondLine),
+        _buildDurationView(line01, line01_fontSize),
+        _buildDurationView(line02, line02_fontSize),
       ],
     );
   }
 
-  Widget _buildDurationRow(List<(String, String)> durationList) => durationList.isEmpty
-    ? const SizedBox.shrink()
-    : Row(
+  Widget _buildDurationView(List<(String, String)> durationList, double fontSize) => Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: durationList.map((part) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              part.$1,
-              style: GoogleFonts.chivoMono(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: MyColor.accent,
+      children: durationList.map((part) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                part.$1,
+                style: GoogleFonts.chivoMono(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.bold,
+                  color: MyColor.accent,
+                ),
               ),
-            ),
-            Text(
-              part.$2,
-              style: GoogleFonts.chivoMono(
-                fontSize: 24,
-                fontWeight: FontWeight.normal,
-                color: MyColor.primary,
+              Text(
+                part.$2,
+                style: GoogleFonts.chivoMono(
+                  fontSize: fontSize * 0.5,
+                  fontWeight: FontWeight.normal,
+                  color: MyColor.primary,
+                ),
               ),
-            ),
-          ],
-        ),
-      )).toList(),
+            ],
+          ),
+        );
+      }).toList(),
     );
 }
