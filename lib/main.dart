@@ -11,6 +11,10 @@ class MyColor {
   static const Color accent = Color(0xFFCCBEA1);
 }
 
+class MyConstants {
+  static const String reference = 'start_date';
+}
+
 class LetGo extends StatelessWidget {
   const LetGo({super.key});
   static const String title = 'LetitGo';
@@ -44,7 +48,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const String _reference = 'start_date';
   DateTime _startDate = DateTime.now();
   late final Timer _timer;
 
@@ -65,7 +68,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadStartDate() async {
     final prefs = await SharedPreferences.getInstance();
-    final startDateMillis = prefs.getInt(_reference);
+    final startDateMillis = prefs.getInt(MyConstants.reference);
     if (startDateMillis == null) {
       await _resetStartDate(DateTime.now());
     } else {
@@ -75,7 +78,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _resetStartDate(DateTime use) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_reference, use.millisecondsSinceEpoch);
+    await prefs.setInt(MyConstants.reference, use.millisecondsSinceEpoch);
     setState(() => _startDate = use);
   }
 
@@ -145,6 +148,29 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
+    drawer: Drawer(
+      child: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 16),
+            height: 160,
+            child: Center(
+              child: _buildTitle(),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.add),
+            title: const Text('Create another Memory'),
+            onTap: () {},
+          ),
+          const Divider(
+            color: MyColor.primary,
+          ),
+
+          // Created Memories here
+        ],
+      ),
+    ),
     appBar: AppBar(
       actions: [
         Padding(
@@ -202,6 +228,10 @@ class _HomePageState extends State<HomePage> {
   );
 
   Widget _buildDurationList() {
+    const int fontFactor = 12;
+    const int multiFactor = 4;
+    const int lineLimit = 3;
+
     final formattedDuration = _formatDuration().toList();
     final line01 = formattedDuration
         .where((element) => ['y', 'M', 'd'].contains(element.$2))
@@ -210,13 +240,13 @@ class _HomePageState extends State<HomePage> {
         .where((element) => ['h', 'm', 's'].contains(element.$2))
         .toList();
 
-    final line01_fontSize = 12 * (3 + (4 - line01.length)).toDouble();
-    final line02_fontSize = (12 * 4).toDouble();
+    final fontSize01 = fontFactor * (multiFactor + lineLimit - line01.length).toDouble();
+    final fontSize02 = fontFactor * multiFactor.toDouble();
 
     return Column(
       children: [
-        _buildDurationView(line01, line01_fontSize),
-        _buildDurationView(line02, line02_fontSize),
+        _buildDurationView(line01, fontSize01),
+        _buildDurationView(line02, fontSize02),
       ],
     );
   }
