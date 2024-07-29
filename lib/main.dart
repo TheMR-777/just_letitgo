@@ -223,7 +223,10 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.add),
+            trailing: const Padding(
+              padding: EdgeInsets.only(right: 8.0),
+              child: Icon(Icons.add),
+            ),
             title: const Text('Create another Memory'),
             onTap: _createTracker,
           ),
@@ -259,7 +262,7 @@ class _HomePageState extends State<HomePage> {
     appBar: AppBar(
       actions: [
         Padding(
-          padding: const EdgeInsets.only(right: 16),
+          padding: const EdgeInsets.only(right: 20),
           child: IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: _selectedIndex != null
