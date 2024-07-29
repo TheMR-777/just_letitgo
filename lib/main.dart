@@ -25,6 +25,7 @@ class MyConstants {
   static const String title = 'LetitGo';
   static const String namesReference = 'tracker_names';
   static const String timestampsReference = 'tracker_timestamps';
+  static const String currentTrackerID = 'current_tracker_id';
 }
 
 class LetGo extends StatelessWidget {
@@ -81,10 +82,12 @@ class _HomePageState extends State<HomePage> {
     final prefs = await SharedPreferences.getInstance();
     final names = prefs.getStringList(MyConstants.namesReference) ?? [];
     final timestamps = prefs.getStringList(MyConstants.timestampsReference) ?? [];
+    final currentIndex = prefs.getInt(MyConstants.currentTrackerID);
+
     setState(() {
       _trackerNames = names;
       _trackerTimestamps = timestamps.map((e) => int.parse(e)).toList();
-      _selectedIndex = _trackerNames.isNotEmpty ? 0 : null;
+      _selectedIndex = currentIndex != null && currentIndex < _trackerNames.length ? currentIndex : _trackerNames.isNotEmpty ? 0 : null;
     });
   }
 
@@ -92,6 +95,7 @@ class _HomePageState extends State<HomePage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(MyConstants.namesReference, _trackerNames);
     await prefs.setStringList(MyConstants.timestampsReference, _trackerTimestamps.map((e) => e.toString()).toList());
+    await prefs.setInt(MyConstants.currentTrackerID, _selectedIndex ?? 0);
   }
 
   Future<void> _createTracker() async {
@@ -245,6 +249,7 @@ class _HomePageState extends State<HomePage> {
                     setState(() {
                       _selectedIndex = index;
                     });
+                    _saveTrackers();
                     Navigator.of(context).pop();
                   },
                   onLongPress: () => _renameTracker(index),
