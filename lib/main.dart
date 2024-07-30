@@ -131,18 +131,31 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _changeStartDate(int index) async {
-    final picked = await showDatePicker(
+  Future<void> _changeStartDateTime(int index) async {
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index]),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
-    if (picked != null) {
-      setState(() {
-        _trackerTimestamps[index] = picked.millisecondsSinceEpoch;
-      });
-      await _saveTrackers();
+    if (pickedDate != null) {
+      final pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index])),
+      );
+      if (pickedTime != null) {
+        final pickedDateTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+        setState(() {
+          _trackerTimestamps[index] = pickedDateTime.millisecondsSinceEpoch;
+        });
+        await _saveTrackers();
+      }
     }
   }
 
@@ -271,7 +284,7 @@ class _HomePageState extends State<HomePage> {
           child: IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: _selectedIndex != null
-                ? () => _changeStartDate(_selectedIndex!)
+                ? () => _changeStartDateTime(_selectedIndex!)
                 : null,
           ),
         ),
