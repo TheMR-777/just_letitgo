@@ -29,6 +29,7 @@ class MyConstants {
   static const String title = 'LetitGo';
   static const String namesReference = 'tracker_names';
   static const String timestampsReference = 'tracker_timestamps';
+  static const String currentTrackerID = 'current_tracker_id';
 }
 
 class LetGo extends StatelessWidget {
@@ -85,10 +86,12 @@ class _HomePageState extends State<HomePage> {
     final prefs = await SharedPreferences.getInstance();
     final names = prefs.getStringList(MyConstants.namesReference) ?? [];
     final timestamps = prefs.getStringList(MyConstants.timestampsReference) ?? [];
+    final currentIndex = prefs.getInt(MyConstants.currentTrackerID);
+
     setState(() {
       _trackerNames = names;
       _trackerTimestamps = timestamps.map((e) => int.parse(e)).toList();
-      _selectedIndex = _trackerNames.isNotEmpty ? 0 : null;
+      _selectedIndex = currentIndex != null && currentIndex < _trackerNames.length ? currentIndex : _trackerNames.isNotEmpty ? 0 : null;
     });
   }
 
@@ -96,6 +99,7 @@ class _HomePageState extends State<HomePage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(MyConstants.namesReference, _trackerNames);
     await prefs.setStringList(MyConstants.timestampsReference, _trackerTimestamps.map((e) => e.toString()).toList());
+    await prefs.setInt(MyConstants.currentTrackerID, _selectedIndex ?? 0);
   }
 
   Future<void> _createTracker() async {
@@ -124,25 +128,34 @@ class _HomePageState extends State<HomePage> {
   Future<void> _renameTracker(int index) async {
     final newName = await _showDialog(context: context, title: 'Rename Memory', hint: 'Enter a new name', initialValue: _trackerNames[index]);
     if (newName != null && newName.isNotEmpty) {
-      setState(() {
-        _trackerNames[index] = newName;
-      });
+      setState(() => _trackerNames[index] = newName);
       await _saveTrackers();
     }
   }
 
-  Future<void> _changeStartDate(int index) async {
-    final picked = await showDatePicker(
+  Future<void> _changeStartDateTime(int index) async {
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index]),
-      firstDate: DateTime(2000),
+      firstDate: DateTime.fromMicrosecondsSinceEpoch(0),
       lastDate: DateTime.now(),
     );
-    if (picked != null) {
-      setState(() {
-        _trackerTimestamps[index] = picked.millisecondsSinceEpoch;
-      });
-      await _saveTrackers();
+    if (pickedDate != null) {
+      final pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index])),
+      );
+      if (pickedTime != null) {
+        final pickedDateTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+        setState(() => _trackerTimestamps[index] = pickedDateTime.millisecondsSinceEpoch);
+        await _saveTrackers();
+      }
     }
   }
 
@@ -168,10 +181,8 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-    if (shouldReset == true) {
-      setState(() {
-        _trackerTimestamps[index] = DateTime.now().millisecondsSinceEpoch;
-      });
+    if (shouldReset ?? false) {
+      setState(() => _trackerTimestamps[index] = DateTime.now().millisecondsSinceEpoch);
       await _saveTrackers();
     }
   }
@@ -249,6 +260,7 @@ class _HomePageState extends State<HomePage> {
                     setState(() {
                       _selectedIndex = index;
                     });
+                    _saveTrackers();
                     Navigator.of(context).pop();
                   },
                   onLongPress: () => _renameTracker(index),
@@ -270,7 +282,7 @@ class _HomePageState extends State<HomePage> {
           child: IconButton(
             icon: const Icon(Icons.calendar_today),
             onPressed: _selectedIndex != null
-                ? () => _changeStartDate(_selectedIndex!)
+                ? () => _changeStartDateTime(_selectedIndex!)
                 : null,
           ),
         ),
@@ -345,32 +357,30 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildDurationView(List<(String, String)> durationList, double fontSize) => Row(
     mainAxisAlignment: MainAxisAlignment.center,
-    children: durationList.map((part) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              part.$1,
-              style: GoogleFonts.chivoMono(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                color: MyColor.accent,
-              ),
+    children: durationList.map((part) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text(
+            part.$1,
+            style: GoogleFonts.chivoMono(
+              fontSize: fontSize,
+              fontWeight: FontWeight.bold,
+              color: MyColor.accent,
             ),
-            Text(
-              part.$2,
-              style: GoogleFonts.chivoMono(
-                fontSize: fontSize * 0.5,
-                fontWeight: FontWeight.normal,
-                color: MyColor.primary,
-              ),
+          ),
+          Text(
+            part.$2,
+            style: GoogleFonts.chivoMono(
+              fontSize: fontSize * 0.5,
+              fontWeight: FontWeight.normal,
+              color: MyColor.primary,
             ),
-          ],
-        ),
-      );
-    }).toList(),
+          ),
+        ],
+      ),
+    )).toList(),
   );
 }
