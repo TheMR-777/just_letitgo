@@ -262,9 +262,7 @@ class _HomePageState extends State<HomePage> {
                   tileColor: isSelected ? MyColor.primary.withOpacity(0.5) : null,
                   title: Text(_trackerNames[index]),
                   onTap: () {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
+                    setState(() => _selectedIndex = index);
                     _saveTrackers();
                     Navigator.of(context).pop();
                   },
