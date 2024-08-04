@@ -115,14 +115,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _deleteTracker(int index) async {
-    setState(() {
-      _trackerNames.removeAt(index);
-      _trackerTimestamps.removeAt(index);
-      if (_selectedIndex == index) {
-        _selectedIndex = _trackerNames.isNotEmpty ? 0 : null;
-      }
-    });
-    await _saveTrackers();
+    final shouldDelete = await _showConfirmationDialog(context, 'Delete Memory', 'Are you sure you want to delete this memory?');
+    if (shouldDelete) {
+      setState(() {
+        _trackerNames.removeAt(index);
+        _trackerTimestamps.removeAt(index);
+        if (_selectedIndex == index) {
+          _selectedIndex = _trackerNames.isNotEmpty ? 0 : null;
+        }
+      });
+      await _saveTrackers();
+    }
   }
 
   Future<void> _renameTracker(int index) async {
@@ -160,28 +163,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _showResetConfirmation(int index) async {
-    final shouldReset = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: MyColor.primary),
-        ),
-        title: const Text('Reset Counter'),
-        content: const Text('Are you sure you want to reset the counter?'),
-        actions: [
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(context).pop(false),
-          ),
-          TextButton(
-            child: const Text('Reset'),
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
-      ),
-    );
-    if (shouldReset ?? false) {
+    final shouldReset = await _showConfirmationDialog(context, 'Reset Counter', 'Are you sure you want to reset the counter?');
+    if (shouldReset) {
       setState(() => _trackerTimestamps[index] = DateTime.now().millisecondsSinceEpoch);
       await _saveTrackers();
     }
@@ -210,6 +193,28 @@ class _HomePageState extends State<HomePage> {
       ],
     ),
   );
+
+  Future<bool> _showConfirmationDialog(BuildContext context, String title, String content) async => await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: MyColor.primary),
+      ),
+      title: Text(title),
+      content: Text(content),
+      actions: [
+        TextButton(
+          child: const Text('Cancel'),
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        TextButton(
+          child: const Text('Confirm'),
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
+    ),
+  ) ?? false;
 
   Iterable<(String, String)> _formatDuration(int index) {
     final startDate = DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index]);
