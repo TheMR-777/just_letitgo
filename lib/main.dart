@@ -13,10 +13,6 @@ void main() {
     systemNavigationBarIconBrightness: Brightness.light,
   ));
   runApp(const LetGo());
-  SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.manual,
-      overlays: [SystemUiOverlay.bottom]
-  );
 }
 
 class MyColor {
