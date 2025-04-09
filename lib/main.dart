@@ -33,23 +33,23 @@ class LetGo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: MyConstants.title,
-    themeMode: ThemeMode.dark,
-    darkTheme: ThemeData(
-      colorScheme: const ColorScheme.dark(
-        primary: MyColor.primary,
-        secondary: MyColor.secondary,
-        tertiary: MyColor.accent,
-        surface: MyColor.secondary,
-        error: MyColor.accent,
-        onPrimary: MyColor.secondary,
-        onSecondary: MyColor.primary,
-        onSurface: MyColor.accent,
-        onError: MyColor.secondary,
-      ),
-    ),
-    home: const HomePage(),
-  );
+        title: MyConstants.title,
+        themeMode: ThemeMode.dark,
+        darkTheme: ThemeData(
+          colorScheme: const ColorScheme.dark(
+            primary: MyColor.primary,
+            secondary: MyColor.secondary,
+            tertiary: MyColor.accent,
+            surface: MyColor.secondary,
+            error: MyColor.accent,
+            onPrimary: MyColor.secondary,
+            onSecondary: MyColor.primary,
+            onSurface: MyColor.accent,
+            onError: MyColor.secondary,
+          ),
+        ),
+        home: const HomePage(),
+      );
 }
 
 class HomePage extends StatefulWidget {
@@ -81,25 +81,33 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadTrackers() async {
     final prefs = await SharedPreferences.getInstance();
     final names = prefs.getStringList(MyConstants.namesReference) ?? [];
-    final timestamps = prefs.getStringList(MyConstants.timestampsReference) ?? [];
+    final timestamps =
+        prefs.getStringList(MyConstants.timestampsReference) ?? [];
     final currentIndex = prefs.getInt(MyConstants.currentTrackerID);
 
     setState(() {
       _trackerNames = names;
       _trackerTimestamps = timestamps.map((e) => int.parse(e)).toList();
-      _selectedIndex = currentIndex != null && currentIndex < _trackerNames.length ? currentIndex : _trackerNames.isNotEmpty ? 0 : null;
+      _selectedIndex =
+          currentIndex != null && currentIndex < _trackerNames.length
+              ? currentIndex
+              : _trackerNames.isNotEmpty
+                  ? 0
+                  : null;
     });
   }
 
   Future<void> _saveTrackers() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(MyConstants.namesReference, _trackerNames);
-    await prefs.setStringList(MyConstants.timestampsReference, _trackerTimestamps.map((e) => e.toString()).toList());
+    await prefs.setStringList(MyConstants.timestampsReference,
+        _trackerTimestamps.map((e) => e.toString()).toList());
     await prefs.setInt(MyConstants.currentTrackerID, _selectedIndex ?? 0);
   }
 
   Future<void> _createTracker() async {
-    final name = await _showDialog(context: context, title: 'Create a new Memory', hint: 'Enter a name');
+    final name = await _showDialog(
+        context: context, title: 'Create a new Memory', hint: 'Enter a name');
     if (name != null && name.isNotEmpty) {
       setState(() {
         _trackerNames.add(name);
@@ -111,7 +119,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _deleteTracker(int index) async {
-    final shouldDelete = await _showConfirmationDialog(context, 'Delete Memory', 'Are you sure you want to delete this memory?');
+    final shouldDelete = await _showConfirmationDialog(context, 'Delete Memory',
+        'Are you sure you want to delete this memory?');
     if (shouldDelete) {
       setState(() {
         _trackerNames.removeAt(index);
@@ -125,7 +134,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _renameTracker(int index) async {
-    final newName = await _showDialog(context: context, title: 'Rename Memory', hint: 'Enter a new name', initialValue: _trackerNames[index]);
+    final newName = await _showDialog(
+        context: context,
+        title: 'Rename Memory',
+        hint: 'Enter a new name',
+        initialValue: _trackerNames[index]);
     if (newName != null && newName.isNotEmpty) {
       setState(() => _trackerNames[index] = newName);
       await _saveTrackers();
@@ -135,14 +148,16 @@ class _HomePageState extends State<HomePage> {
   Future<void> _changeStartDateTime(int index) async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index]),
+      initialDate:
+          DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index]),
       firstDate: DateTime.fromMicrosecondsSinceEpoch(0),
       lastDate: DateTime.now(),
     );
     if (pickedDate != null) {
       final pickedTime = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.fromDateTime(DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index])),
+        initialTime: TimeOfDay.fromDateTime(
+            DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index])),
       );
       if (pickedTime != null) {
         final pickedDateTime = DateTime(
@@ -152,16 +167,19 @@ class _HomePageState extends State<HomePage> {
           pickedTime.hour,
           pickedTime.minute,
         );
-        setState(() => _trackerTimestamps[index] = pickedDateTime.millisecondsSinceEpoch);
+        setState(() =>
+            _trackerTimestamps[index] = pickedDateTime.millisecondsSinceEpoch);
         await _saveTrackers();
       }
     }
   }
 
   Future<void> _showResetConfirmation(int index) async {
-    final shouldReset = await _showConfirmationDialog(context, 'Reset Counter', 'Are you sure you want to reset the counter?');
+    final shouldReset = await _showConfirmationDialog(context, 'Reset Counter',
+        'Are you sure you want to reset the counter?');
     if (shouldReset) {
-      setState(() => _trackerTimestamps[index] = DateTime.now().millisecondsSinceEpoch);
+      setState(() =>
+          _trackerTimestamps[index] = DateTime.now().millisecondsSinceEpoch);
       await _saveTrackers();
     }
   }
@@ -171,49 +189,65 @@ class _HomePageState extends State<HomePage> {
     required String title,
     required String hint,
     String? initialValue,
-  }) async => showDialog<String>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: TextField(
-        autofocus: true,
-        decoration: InputDecoration(hintText: hint),
-        controller: initialValue != null ? TextEditingController(text: initialValue) : null,
-        onSubmitted: (value) => Navigator.of(context).pop(value),
-      ),
-      actions: [
-        TextButton(
-          child: const Text('Cancel'),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ],
-    ),
-  );
+  }) async =>
+      showDialog<String>(
+          context: context,
+          builder: (context) {
+            final textController = TextEditingController(text: initialValue);
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: MyColor.primary),
+              ),
+              title: Text(title),
+              content: TextField(
+                autofocus: true,
+                decoration: InputDecoration(hintText: hint),
+                controller: textController,
+                onSubmitted: (value) => Navigator.of(context).pop(value),
+              ),
+              actions: [
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                TextButton(
+                  child: const Text('Confirm'),
+                  onPressed: () =>
+                      Navigator.of(context).pop(textController.text),
+                ),
+              ],
+            );
+          });
 
-  Future<bool> _showConfirmationDialog(BuildContext context, String title, String content) async => await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: MyColor.primary),
-      ),
-      title: Text(title),
-      content: Text(content),
-      actions: [
-        TextButton(
-          child: const Text('Cancel'),
-          onPressed: () => Navigator.of(context).pop(false),
+  Future<bool> _showConfirmationDialog(
+          BuildContext context, String title, String content) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: MyColor.primary),
+          ),
+          title: Text(title),
+          content: Text(content),
+          actions: [
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            TextButton(
+              child: const Text('Confirm'),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
         ),
-        TextButton(
-          child: const Text('Confirm'),
-          onPressed: () => Navigator.of(context).pop(true),
-        ),
-      ],
-    ),
-  ) ?? false;
+      ) ??
+      false;
 
   Iterable<(String, String)> _formatDuration(int index) {
-    final startDate = DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index]);
+    final startDate =
+        DateTime.fromMillisecondsSinceEpoch(_trackerTimestamps[index]);
     final duration = DateTime.now().difference(startDate);
     final timeUnits = [
       (duration.inDays ~/ 365, 'y'),
@@ -223,116 +257,120 @@ class _HomePageState extends State<HomePage> {
       (duration.inMinutes % 60, 'm'),
       (duration.inSeconds % 60, 's'),
     ];
-    return timeUnits.where((unit) => unit.$1 > 0).map((unit) => (unit.$1.toString().padLeft(2, '0'), unit.$2));
+    return timeUnits
+        .where((unit) => unit.$1 > 0)
+        .map((unit) => (unit.$1.toString().padLeft(2, '0'), unit.$2));
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    drawer: Drawer(
-      child: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(top: 16),
-            height: 160,
-            child: Center(
-              child: _buildTitle(),
-            ),
-          ),
-          ListTile(
-            trailing: const Padding(
-              padding: EdgeInsets.only(right: 8.0),
-              child: Icon(Icons.add),
-            ),
-            title: const Text('Create another Memory'),
-            onTap: _createTracker,
-          ),
-          const Divider(
-            color: MyColor.primary,
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _trackerNames.length,
-              itemBuilder: (context, index) {
-                final isSelected = _selectedIndex == index;
-                return ListTile(
-                  tileColor: isSelected ? MyColor.primary.withOpacity(0.5) : null,
-                  title: Text(_trackerNames[index]),
-                  onTap: () {
-                    setState(() => _selectedIndex = index);
-                    _saveTrackers();
-                    Navigator.of(context).pop();
-                  },
-                  onLongPress: () => _renameTracker(index),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _deleteTracker(index),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    ),
-    appBar: AppBar(
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 20),
-          child: IconButton(
-            icon: const Icon(Icons.calendar_today),
-            onPressed: _selectedIndex != null
-                ? () => _changeStartDateTime(_selectedIndex!)
-                : null,
-          ),
-        ),
-      ],
-    ),
-    body: GestureDetector(
-      onTap: _selectedIndex != null
-          ? () => _showResetConfirmation(_selectedIndex!)
-          : null,
-      child: Container(
-        color: MyColor.secondary,
-        child: Center(
+        drawer: Drawer(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildTitle(),
-              if (_selectedIndex != null) _buildDurationList(_selectedIndex!),
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                height: 160,
+                child: Center(
+                  child: _buildTitle(),
+                ),
+              ),
+              ListTile(
+                trailing: const Padding(
+                  padding: EdgeInsets.only(right: 8.0),
+                  child: Icon(Icons.add),
+                ),
+                title: const Text('Create another Memory'),
+                onTap: _createTracker,
+              ),
+              const Divider(
+                color: MyColor.primary,
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _trackerNames.length,
+                  itemBuilder: (context, index) {
+                    final isSelected = _selectedIndex == index;
+                    return ListTile(
+                      tileColor:
+                          isSelected ? MyColor.primary.withOpacity(0.5) : null,
+                      title: Text(_trackerNames[index]),
+                      onTap: () {
+                        setState(() => _selectedIndex = index);
+                        _saveTrackers();
+                        Navigator.of(context).pop();
+                      },
+                      onLongPress: () => _renameTracker(index),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => _deleteTracker(index),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ],
           ),
         ),
-      ),
-    ),
-  );
+        appBar: AppBar(
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 20),
+              child: IconButton(
+                icon: const Icon(Icons.calendar_today),
+                onPressed: _selectedIndex != null
+                    ? () => _changeStartDateTime(_selectedIndex!)
+                    : null,
+              ),
+            ),
+          ],
+        ),
+        body: GestureDetector(
+          onTap: _selectedIndex != null
+              ? () => _showResetConfirmation(_selectedIndex!)
+              : null,
+          child: Container(
+            color: MyColor.secondary,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildTitle(),
+                  if (_selectedIndex != null)
+                    _buildDurationList(_selectedIndex!),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
 
   Text _buildTitle() => Text.rich(
-    TextSpan(
-      children: [
         TextSpan(
-          text: 'Let',
-          style: GoogleFonts.dancingScript(
-            color: MyColor.accent,
-            fontSize: 50,
-          ),
+          children: [
+            TextSpan(
+              text: 'Let',
+              style: GoogleFonts.dancingScript(
+                color: MyColor.accent,
+                fontSize: 50,
+              ),
+            ),
+            TextSpan(
+              text: 'it',
+              style: GoogleFonts.dancingScript(
+                color: MyColor.primary,
+                fontSize: 50,
+              ),
+            ),
+            TextSpan(
+              text: 'Go',
+              style: GoogleFonts.dancingScript(
+                color: MyColor.accent,
+                fontSize: 50,
+              ),
+            ),
+          ],
         ),
-        TextSpan(
-          text: 'it',
-          style: GoogleFonts.dancingScript(
-            color: MyColor.primary,
-            fontSize: 50,
-          ),
-        ),
-        TextSpan(
-          text: 'Go',
-          style: GoogleFonts.dancingScript(
-            color: MyColor.accent,
-            fontSize: 50,
-          ),
-        ),
-      ],
-    ),
-  );
+      );
 
   Widget _buildDurationList(int index) {
     const int fontFactor = 12;
@@ -340,10 +378,15 @@ class _HomePageState extends State<HomePage> {
     const int lineLimit = 3;
 
     final formattedDuration = _formatDuration(index).toList();
-    final line01 = formattedDuration.where((element) => ['y', 'M', 'd'].contains(element.$2)).toList();
-    final line02 = formattedDuration.where((element) => ['h', 'm', 's'].contains(element.$2)).toList();
+    final line01 = formattedDuration
+        .where((element) => ['y', 'M', 'd'].contains(element.$2))
+        .toList();
+    final line02 = formattedDuration
+        .where((element) => ['h', 'm', 's'].contains(element.$2))
+        .toList();
 
-    final fontSize01 = fontFactor * (multiFactor + lineLimit - line01.length).toDouble();
+    final fontSize01 =
+        fontFactor * (multiFactor + lineLimit - line01.length).toDouble();
     final fontSize02 = fontFactor * multiFactor.toDouble();
 
     return Column(
@@ -354,32 +397,36 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDurationView(List<(String, String)> durationList, double fontSize) => Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: durationList.map((part) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          Text(
-            part.$1,
-            style: GoogleFonts.chivoMono(
-              fontSize: fontSize,
-              fontWeight: FontWeight.bold,
-              color: MyColor.accent,
-            ),
-          ),
-          Text(
-            part.$2,
-            style: GoogleFonts.chivoMono(
-              fontSize: fontSize * 0.5,
-              fontWeight: FontWeight.normal,
-              color: MyColor.primary,
-            ),
-          ),
-        ],
-      ),
-    )).toList(),
-  );
+  Widget _buildDurationView(
+          List<(String, String)> durationList, double fontSize) =>
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: durationList
+            .map((part) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        part.$1,
+                        style: GoogleFonts.chivoMono(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.bold,
+                          color: MyColor.accent,
+                        ),
+                      ),
+                      Text(
+                        part.$2,
+                        style: GoogleFonts.chivoMono(
+                          fontSize: fontSize * 0.5,
+                          fontWeight: FontWeight.normal,
+                          color: MyColor.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ))
+            .toList(),
+      );
 }
